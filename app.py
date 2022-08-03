@@ -5,22 +5,22 @@ from datetime import datetime
 import json 
 import web3tnx as w3
 from random import randint as r
-# from flask_mail import Mail, Message
+from flask_mail import Mail, Message
 
 with open("info.json", "r") as c:
     parameters = json.load(c)["parameters"]
 
 app = Flask(__name__)
 
-# app.config.update(
-#     MAIL_SERVER = 'smtp.gmail.com',
-#     MAIL_PORT = '465',
-#     MAIL_USE_SSL = True,
-#     MAIL_USERNAME = parameters['gmail-user'],
-#     MAIL_PASSWORD=  parameters['gmail-password']
-# )
+app.config.update(
+    MAIL_SERVER = 'smtp.gmail.com',
+    MAIL_PORT = '465',
+    MAIL_USE_SSL = True,
+    MAIL_USERNAME = parameters['gmail-user'],
+    MAIL_PASSWORD=  parameters['gmail-password']
+)
 
-# mail = Mail(app)
+mail = Mail(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = parameters["database"]
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = parameters["track_modifications"]
@@ -168,21 +168,21 @@ def signout():
 
 
 
-# @app.route('/makepayment', methods = ['GET', 'POST'])
-# @login_required
-# def makepayment():
-#     if request.method == 'POST':
-#         account_reciver = request.form.get('account_reciver')
-#         user_password = w3.SHA256(request.form.get('user_password'))
+@app.route('/makepayment', methods = ['GET', 'POST'])
+@login_required
+def makepayment():
+    if request.method == 'POST':
+        account_reciver = request.form.get('account_reciver')
+        user_password = w3.SHA256(request.form.get('user_password'))
         
-#         value = float(request.form.get('value'))
+        value = float(request.form.get('value'))
 
-#         if user_password == current_user.user_password and value <= current_user.user_bal:
-#             current_user.user_bal -= float(value)
-#             hash_returned = payments(current_user.user_addres, account_reciver, current_user.user_priv_key, value)
-#             return render_template('index.html', user = current_user, hash_returned = hash_returned)
+        if user_password == current_user.user_password and value <= current_user.user_bal:
+            current_user.user_bal -= float(value)
+            hash_returned = w3.make_transacti(current_user.user_addres, account_reciver, current_user.user_priv_key, value)
+            return render_template('index.html', user = current_user, hash_returned = hash_returned)
 
-#     return render_template('index.html', user = current_user)
+    return render_template('index.html', user = current_user)
 
 
 
@@ -386,23 +386,23 @@ def api_algo_trade(x):
  
  
             
-# @app.route('/api/check/<x>/', methods = ['GET'])
-# def api_algo_check(x):
-#     if request.method == 'GET':
-#         pos_users = User.query.filter_by(user_addres = str(x))[0]
-#         if pos_users.user_addres == x:
-#             user = User.query.get(pos_users.id)
-#             load_user(user.id)
-#             login_user(user)
+@app.route('/api/check/<x>/', methods = ['GET'])
+def api_algo_check(x):
+    if request.method == 'GET':
+        pos_users = User.query.filter_by(user_addres = str(x))[0]
+        if pos_users.user_addres == x:
+            user = User.query.get(pos_users.id)
+            load_user(user.id)
+            login_user(user)
 
-#             if current_user.user_alert >= w3.get_val_eth(False):
-#                 msg = "The value of ether that you had set for " + str(current_user.user_alert) + " has changed to " + str(w3.get_val_eth(False)) + ". Keep Trading!!"
-#                 email = current_user.user_email 
-#                 mail.send_message(subject='Alert Crpto Price Changed!!',
-#                                   sender = email,
-#                                   recipients = [parameters['gmail-user']],
-#                                   body = msg)
-                # return render_template('Msg Sent' + str(msg))
+            if current_user.user_alert >= w3.get_val_eth(False):
+                msg = "The value of ether that you had set for " + str(current_user.user_alert) + " has changed to " + str(w3.get_val_eth(False)) + ". Keep Trading!!"
+                email = current_user.user_email 
+                mail.send_message(subject='Alert Crpto Price Changed!!',
+                                  sender = email,
+                                  recipients = [parameters['gmail-user']],
+                                  body = msg)
+                return render_template('Msg Sent' + str(msg))
 
 if __name__ == '__main__':
     app.run(debug = True, threaded = True)
